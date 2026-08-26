@@ -2,6 +2,8 @@
 
 An interactive, high-fidelity Python web application built with Streamlit that simulates the end-to-end pipeline of **DNA Digital Data Storage**. The system compiles digital assets (PDFs, Images, Text docs) into synthetic biological sequences (`A`, `C`, `G`, `T`), evaluates their chemical viability for physical manufacturing, and flawlessly decodes them back into their original format with 100% data integrity.
 
+📚 Want to see the engineering journey behind this project? Read our full [Project Development Story](STORY.md).
+
 ---
 
 ## 🚀 Core Features
@@ -11,10 +13,10 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 * **Real-World Scale Diagnostics**: Automatically calculates simulated molecular weight in nanograms and flags structural **Homopolymers** (repeating sequences like `AAAA`) that disrupt laboratory lasers.
 * **Interactive Waveform Profile**: Generates a moving-window chemical profile using **Plotly** to visualize GC-Content stability thresholds.
 * **Cross-Browser Reliability**: Optimized to bypass aggressive Google Chrome, Edge, and Safari security policies by handling raw byte streaming server-side.
+
 ---
 
-
-## 🛠️ Architecture & Pipeline Overview
+## 🛠️ Software Pipeline Architecture
 
 ```mermaid
 graph TD
@@ -28,6 +30,36 @@ graph TD
     style A fill:#4F46E5,stroke:#333,stroke-width:2px,color:#fff
     style E fill:#06B6D4,stroke:#333,stroke-width:2px,color:#fff
     style G fill:#059669,stroke:#333,stroke-width:2px,color:#fff
+```
+
+---
+
+## 🏢 Real-World Physical Storage Architecture
+
+Unlike traditional server drives that require constant electrical current, simulated DNA data represents assets preserved inside physical cold-storage molecular vaults.
+
+```mermaid
+graph TD
+    subgraph Silicon [💾 Traditional Hard Drive]
+        A[Spinning Magnetic Platters] --> B[Mechanical Actuator Arms]
+        B --> C[Buzzing Server Rack]
+        C --> D[Continuous Power Consumption]
+        D --> E[Lifespan: 5 to 10 Years Max]
+    end
+
+    subgraph Biology [🧬 Synthetic DNA Archive]
+        F[Microscopic Dry Powder Pellet] --> G[Laser-Sealed Silica Glass Bead]
+        G --> H[Automated Cold Vault Vial]
+        H --> I[Zero Passive Power Needed]
+        I --> J[Lifespan: Thousands of Years]
+    end
+
+    style Silicon fill:#1E293B,stroke:#64748B,stroke-width:2px,color:#fff
+    style Biology fill:#0F172A,stroke:#06B6D4,stroke-width:2px,color:#fff
+    style A fill:#475569,color:#fff
+    style E fill:#EF4444,color:#fff
+    style F fill:#0891B2,color:#fff
+    style J fill:#10B981,color:#fff
 ```
 
 ---
@@ -49,7 +81,6 @@ cd dna-storage-simulator-pro
 ```
 
 ### 2. Install Required Dependencies
-Ensure you have Python installed, then run:
 ```bash
 pip install streamlit plotly
 ```
@@ -58,7 +89,6 @@ pip install streamlit plotly
 ```bash
 streamlit run app.py
 ```
-Open your browser and navigate to the local server port displayed in your terminal (usually `http://localhost:8501`).
 
 ---
 
@@ -73,8 +103,8 @@ The application has been verified to pass the following production validation me
 ---
 
 📚 Want to see the engineering journey behind this project? Read our [Project Development Story](STORY.md).
----
 
+---
 
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
