@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import hashlib
 
 # --- 1. SET PAGE CONFIGURATION ---
 st.set_page_config(page_title="DNA Storage Simulator Pro", page_icon="🧬", layout="wide")
@@ -9,10 +10,12 @@ if "dna_strand" not in st.session_state:
     st.session_state.dna_strand = ""
 if "filename" not in st.session_state:
     st.session_state.filename = "downloaded_file.pdf"
+if "checksum" not in st.session_state:
+    st.session_state.checksum = ""
 
-# --- 3. BIOLOGICAL SIMULATOR CORES ---
+# --- 3. ADVANCED DNA CODING ENGINES ---
 def encode_bytes_to_dna(data_bytes):
-    """Dynamically converts raw uploaded file bytes into continuous A,C,G,T strands."""
+    """Converts raw file bytes into continuous A,C,G,T strands with validation tracking."""
     binary_string = "".join(f"{b:08b}" for b in data_bytes)
     mapping = {"00": "A", "01": "C", "10": "G", "11": "T"}
     dna_list = []
@@ -25,7 +28,7 @@ def encode_bytes_to_dna(data_bytes):
     return "".join(dna_list)
 
 def decode_dna_to_bytes(dna_string):
-    """Dynamically reconstructs clean binary letters back into raw file byte arrays."""
+    """Reconstructs clean binary letters back into raw file byte arrays."""
     mapping = {"A": "00", "C": "01", "G": "10", "T": "11"}
     clean_dna = [base for base in dna_string.upper() if base in mapping]
     binary_string = "".join(mapping[base] for base in clean_dna)
@@ -36,13 +39,24 @@ def decode_dna_to_bytes(dna_string):
         byte_arr.append(int(binary_string[i:i+8], 2))
     return bytes(byte_arr)
 
+def check_homopolymers(dna_sequence):
+    """Detects dangerous structural repetitions (4+ identical bases in a row)."""
+    max_run = 0
+    current_run = 1
+    for i in range(1, len(dna_sequence)):
+        if dna_sequence[i] == dna_sequence[i-1]:
+            current_run += 1
+            max_run = max(max_run, current_run)
+        else:
+            current_run = 1
+    return max_run
+
 # --- 4. DYNAMIC PLOTLY GENERATOR ---
 def generate_density_chart(dna_sequence):
     """Calculates molecular chemical density profile loops across moving sequences."""
     if not dna_sequence:
         return None
         
-    # Group nucleotides into chunks to map density shifts chronologically
     step = max(1, len(dna_sequence) // 50)
     chunks = [dna_sequence[i:i+step] for i in range(0, len(dna_sequence), step)]
     
@@ -55,18 +69,14 @@ def generate_density_chart(dna_sequence):
         gc_densities.append(ratio)
         positions.append(index * step)
         
-    # Build Interactive Plotly Visualization Frame
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=positions, 
-        y=gc_densities, 
-        mode='lines+markers',
-        name='GC Ratio %',
+        x=positions, y=gc_densities, 
+        mode='lines+markers', name='GC Ratio %',
         line=dict(color='#00CC96', width=2),
         marker=dict(size=4)
     ))
     
-    # Ideal stabilization reference thresholds (40% - 60%)
     fig.add_hline(y=50, line_dash="dash", line_color="cyan", annotation_text="Ideal Target (50%)")
     fig.add_hrect(y0=40, y1=60, line_width=0, fillcolor="rgba(0,204,150,0.1)", annotation_text="Stability Zone")
     
@@ -76,12 +86,12 @@ def generate_density_chart(dna_sequence):
         yaxis_title="GC Density Ratio (%)",
         yaxis_range=[0, 100],
         template="plotly_dark",
-        height=350,
+        height=320,
         margin=dict(l=20, r=20, t=40, b=20)
     )
     return fig
 
-# --- 5. SYSTEM LAYOUT GRAPHICS ---
+# --- 5. SYSTEM LAYOUT UI ---
 st.title("🧬 DNA Storage Simulator Pro")
 st.caption("Upload production files, encode them to biological sequences, and monitor chemical density profiles.")
 
@@ -98,12 +108,13 @@ with tab1:
         if len(file_bytes) > 150000:
             st.error("File size limits exceeded. Please process a file beneath 50KB.")
         else:
-            # Automate mapping process immediately
+            # Operational Pipeline Execution
             dna_sequence = encode_bytes_to_dna(file_bytes)
+            file_hash = hashlib.md5(file_bytes).hexdigest()
             
-            # Map values permanently to memory states
             st.session_state.dna_strand = dna_sequence
             st.session_state.filename = uploaded_file.name
+            st.session_state.checksum = file_hash
             
             # Metrics Dashboards
             c1, c2, c3 = st.columns(3)
@@ -114,33 +125,44 @@ with tab1:
             st.markdown("### 🔬 Real-World Biological Storage Scale")
             nanograms = (len(dna_sequence) * 650) / 1e9
             st.info(f"⚖️ **Physical DNA Weight:** This file weighs **{nanograms:.6f} nanograms** as a physical molecule.")
-            st.success("⏳ **Format Lifespan:** Kept dry in cold capsules, this physical file will last for thousands of years without corruption.")
             
+            # Sequence Interface Panel
             st.markdown("### Generated Genetic Strand Code:")
-            st.text_area("Full Untruncated Sequence Stream", value=dna_sequence, height=150, disabled=True)
+            st.text_area("Full Untruncated Sequence Stream", value=dna_sequence, height=120, disabled=True)
             
-            # --- PLOTLY DENSITY MODULE INTEGRATION ---
-            st.markdown("### 📊 Chemical Waveform Analysis")
+            # Direct Sequence Download Button (Saves browser clipboard crashes!)
+            st.download_button(
+                label="📄 Download Raw DNA Sequence (.txt)",
+                data=dna_sequence,
+                file_name=f"{uploaded_file.name}_sequence.txt",
+                mime="text/plain"
+            )
+            
+            # --- QUALITY & WAVEFORM CONTROL MODULE ---
+            st.markdown("### 📊 Structural Quality Validation")
             gc_count = dna_sequence.count("G") + dna_sequence.count("C")
             gc_ratio = (gc_count / len(dna_sequence)) * 100 if dna_sequence else 0
+            max_run = check_homopolymers(dna_sequence)
             
-            st.metric("Total Overall GC-Content Ratio", f"{gc_ratio:.1f}%")
+            v1, v2 = st.columns(2)
+            v1.metric("Overall GC Content", f"{gc_ratio:.1f}%")
+            v2.metric("Max Repeating Run length", f"{max_run} Bases")
             
-            # Render interactive structural tracking engine
+            # Interactive Chart Display
             fig_density = generate_density_chart(dna_sequence)
             if fig_density:
                 st.plotly_chart(fig_density, use_container_width=True)
                 
-            if 40 <= gc_ratio <= 60:
-                st.success("✅ Excellent chemical stability target calculated for physical manufacturing.")
+            # Synthesis Diagnostics Warnings
+            if max_run >= 4:
+                st.warning(f"⚠️ Warning: Sequence contains a homopolymer sequence of {max_run} repeating bases. This could cause synthesis lasers to slip.")
             else:
-                st.warning("⚠️ Warning: Extreme GC balance variation could complicate thermal synthesis loops.")
+                st.success("✅ Sequence passing homopolymer safety threshold checks successfully.")
 
 # --- TAB 2: AUTOMATED DECODER ---
 with tab2:
     st.subheader("Decode DNA Strands Back to Files")
     
-    # HANDSHAKE: Reads directly from state to remove manual typing errors
     dna_input = st.text_area(
         "Input continuous raw DNA base sequence (A, C, G, T):", 
         value=st.session_state.dna_strand,
@@ -155,13 +177,19 @@ with tab2:
     
     if dna_input:
         try:
-            # Reconstruct byte objects dynamically
             reconstructed_bytes = decode_dna_to_bytes(dna_input)
+            decoded_hash = hashlib.md5(reconstructed_bytes).hexdigest()
             
             if len(reconstructed_bytes) > 0:
                 st.success("🧬 Decoding sequence execution successful!")
                 
-                # Active non-zero memory download asset link
+                # Check file verification authenticity integrity hashes
+                if st.session_state.checksum and decoded_hash == st.session_state.checksum:
+                    st.success("🛡️ File Integrity Verified: MD5 matching signatures confirmed. 0% data corruption detected.")
+                else:
+                    st.warning("⚠️ Warning: Data mismatch detected. The DNA sequence modified since synthesis.")
+                
+                # Execution download connection link
                 st.download_button(
                     label="📥 Download Restored Asset",
                     data=reconstructed_bytes,
