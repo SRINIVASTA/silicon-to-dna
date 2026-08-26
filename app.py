@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import plotly.graph_objects as go
 import hashlib
 
@@ -101,41 +100,36 @@ tab1, tab2 = st.tabs(["📤 Upload & Encode Files", "📥 Read & Decode DNA"])
 # --- TAB 1: AUTOMATED ENCODER ---
 with tab1:
     st.subheader("Encode Any File")
-    
-    # 🚀 JAVASCRIPT INJECTION: Reaches inside Streamlit DOM to modify the system "25MB" layout rule text
-    components.html(
-        """
-        <script>
-            function patchUploader() {
-                const instructions = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzoneInstructions"]');
-                instructions.forEach(el => {
-                    const smallText = el.querySelector('small');
-                    if (smallText && !smallText.innerHTML.includes('50KB')) {
-                        smallText.innerHTML = "Limit 50KB per file • PDF, PNG, JPG, TXT";
-                        smallText.style.fontSize = "13px";
-                        smallText.style.fontWeight = "bold";
-                        smallText.style.color = "#FF4B4B";
-                    }
-                });
-            }
-            patchUploader();
-            setInterval(patchUploader, 1000);
-        </script>
-        """,
-        height=0,
-        width=0
-    )
 
-    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"], max_upload_size="50KB")
+    # 🎨 INJECT CSS DIRECTLY TO OVERWRITE THE WIDGET DISPLAY LAYER SAFE
+    st.markdown("""
+        <style>
+            div[data-testid="stFileUploaderDropzoneInstructions"] small {
+                font-size: 0px !important;
+                display: none !important;
+                visibility: hidden !important;
+            }
+            div[data-testid="stFileUploaderDropzoneInstructions"]::after {
+                content: "Limit 50KB per file • PDF, PNG, JPG, TXT";
+                font-size: 13px !important;
+                color: #A3A3A3;
+                display: block;
+                margin-top: 4px;
+                font-weight: bold;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Standard clean function file call (Safe from parameter errors)
+    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"])
     
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         file_size_kb = len(file_bytes) / 1024
         
-        # The 50KB Hard Guard Block
+        # Additional programmatic backup verification layer
         if file_size_kb > 50.0:
-            st.error(f"❌ Upload Blocked! Your file is {file_size_kb:.2f} KB. The simulator safety ceiling is exactly 50.0 KB to protect system memory strings.")
-            st.warning("⚠️ Processing millions of generated text bases will freeze your web browser layout window. Please downsize your file.")
+            st.error(f"❌ Upload Blocked! Your file is {file_size_kb:.2f} KB. The simulator safety ceiling is exactly 50.0 KB.")
         else:
             # Operational Pipeline Execution
             dna_sequence = encode_bytes_to_dna(file_bytes)
@@ -212,13 +206,11 @@ with tab2:
             if len(reconstructed_bytes) > 0:
                 st.success("🧬 Decoding sequence execution successful!")
                 
-                # Check file verification authenticity integrity hashes
                 if st.session_state.checksum and decoded_hash == st.session_state.checksum:
                     st.success("🛡️ File Integrity Verified: MD5 matching signatures confirmed. 0% data corruption detected.")
                 else:
                     st.warning("⚠️ Warning: Data mismatch detected. The DNA sequence has been modified since synthesis.")
                 
-                # Execution download connection link
                 st.download_button(
                     label="📥 Download Restored Asset",
                     data=reconstructed_bytes,
