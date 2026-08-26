@@ -14,33 +14,6 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 ---
 
 
-```mermaid
-graph TD
-    %% Left Side: Traditional Hardware
-    subgraph Silicon [💾 Traditional Hard Drive]
-        A[Spinning Magnetic Platters] --> B[Mechanical Actuator Arms]
-        B --> C[Buzzing Server Rack]
-        C --> D[Continuous Power Consumption]
-        D --> E[Lifespan: 5 to 10 Years Max]
-    end
-
-    %% Right Side: Molecular Hardware
-    subgraph Biology [🧬 Synthetic DNA Archive]
-        F[Microscopic Dry Powder Pellet] --> G[Laser-Sealed Silica Glass Bead]
-        G --> H[Automated Cold Vault Vial]
-        H --> I[Zero Passive Power Needed]
-        I --> J[Lifespan: Thousands of Years]
-    end
-
-    %% Node Styling for High Visibility
-    style Silicon fill:#1E293B,stroke:#64748B,stroke-width:2px,color:#fff
-    style Biology fill:#0F172A,stroke:#06B6D4,stroke-width:2px,color:#fff
-    style A fill:#475569,color:#fff
-    style E fill:#EF4444,color:#fff
-    style F fill:#0891B2,color:#fff
-    style J fill:#10B981,color:#fff
----
-
 ## 🛠️ Architecture & Pipeline Overview
 
 ```mermaid
