@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.graph_objects as go
 
 # --- 1. SET PAGE CONFIGURATION ---
 st.set_page_config(page_title="DNA Storage Simulator Pro", page_icon="🧬", layout="wide")
@@ -35,7 +36,52 @@ def decode_dna_to_bytes(dna_string):
         byte_arr.append(int(binary_string[i:i+8], 2))
     return bytes(byte_arr)
 
-# --- 4. SYSTEM LAYOUT GRAPHICS ---
+# --- 4. DYNAMIC PLOTLY GENERATOR ---
+def generate_density_chart(dna_sequence):
+    """Calculates molecular chemical density profile loops across moving sequences."""
+    if not dna_sequence:
+        return None
+        
+    # Group nucleotides into chunks to map density shifts chronologically
+    step = max(1, len(dna_sequence) // 50)
+    chunks = [dna_sequence[i:i+step] for i in range(0, len(dna_sequence), step)]
+    
+    gc_densities = []
+    positions = []
+    
+    for index, chunk in enumerate(chunks):
+        gc_count = chunk.count("G") + chunk.count("C")
+        ratio = (gc_count / len(chunk)) * 100 if chunk else 0
+        gc_densities.append(ratio)
+        positions.append(index * step)
+        
+    # Build Interactive Plotly Visualization Frame
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=positions, 
+        y=gc_densities, 
+        mode='lines+markers',
+        name='GC Ratio %',
+        line=dict(color='#00CC96', width=2),
+        marker=dict(size=4)
+    ))
+    
+    # Ideal stabilization reference thresholds (40% - 60%)
+    fig.add_hline(y=50, line_dash="dash", line_color="cyan", annotation_text="Ideal Target (50%)")
+    fig.add_hrect(y0=40, y1=60, line_width=0, fillcolor="rgba(0,204,150,0.1)", annotation_text="Stability Zone")
+    
+    fig.update_layout(
+        title="Interactive Molecular Density Profile",
+        xaxis_title="Nucleotide Base Index Location",
+        yaxis_title="GC Density Ratio (%)",
+        yaxis_range=[0, 100],
+        template="plotly_dark",
+        height=350,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    return fig
+
+# --- 5. SYSTEM LAYOUT GRAPHICS ---
 st.title("🧬 DNA Storage Simulator Pro")
 st.caption("Upload production files, encode them to biological sequences, and monitor chemical density profiles.")
 
@@ -71,14 +117,20 @@ with tab1:
             st.success("⏳ **Format Lifespan:** Kept dry in cold capsules, this physical file will last for thousands of years without corruption.")
             
             st.markdown("### Generated Genetic Strand Code:")
-            st.text_area("Full Untruncated Sequence Stream", value=dna_sequence, height=200, disabled=True)
+            st.text_area("Full Untruncated Sequence Stream", value=dna_sequence, height=150, disabled=True)
             
-            # Chemical Stability Monitoring (GC-Content Calculation)
+            # --- PLOTLY DENSITY MODULE INTEGRATION ---
+            st.markdown("### 📊 Chemical Waveform Analysis")
             gc_count = dna_sequence.count("G") + dna_sequence.count("C")
             gc_ratio = (gc_count / len(dna_sequence)) * 100 if dna_sequence else 0
             
-            st.markdown("### 📊 Interactive Molecular Density Profile")
-            st.metric("Total GC-Content Ratio", f"{gc_ratio:.1f}%")
+            st.metric("Total Overall GC-Content Ratio", f"{gc_ratio:.1f}%")
+            
+            # Render interactive structural tracking engine
+            fig_density = generate_density_chart(dna_sequence)
+            if fig_density:
+                st.plotly_chart(fig_density, use_container_width=True)
+                
             if 40 <= gc_ratio <= 60:
                 st.success("✅ Excellent chemical stability target calculated for physical manufacturing.")
             else:
@@ -92,7 +144,7 @@ with tab2:
     dna_input = st.text_area(
         "Input continuous raw DNA base sequence (A, C, G, T):", 
         value=st.session_state.dna_strand,
-        height=200,
+        height=150,
         help="This dynamically imports your generated sequence from the upload tab."
     )
     
