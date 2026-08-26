@@ -126,7 +126,7 @@ with tab1:
         width=0
     )
 
-    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"])
+    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"], max_upload_size="50KB")
     
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
