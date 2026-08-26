@@ -102,9 +102,6 @@ The application has been verified to pass the following production validation me
 
 ---
 
-📚 Want to see the engineering journey behind this project? Read our [Project Development Story](STORY.md).
-
----
 
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
