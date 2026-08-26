@@ -11,8 +11,9 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 * **Real-World Scale Diagnostics**: Automatically calculates simulated molecular weight in nanograms and flags structural **Homopolymers** (repeating sequences like `AAAA`) that disrupt laboratory lasers.
 * **Interactive Waveform Profile**: Generates a moving-window chemical profile using **Plotly** to visualize GC-Content stability thresholds.
 * **Cross-Browser Reliability**: Optimized to bypass aggressive Google Chrome, Edge, and Safari security policies by handling raw byte streaming server-side.
+---
 
-📊 Physical Storage Comparisontext
+# 📊 Physical Storage Comparisontext
 
 💾 TRADITIONAL HARD DRIVE               🧬 SYNTHETIC DNA ARCHIVE
 ┌─────────────────────────────────┐     ┌─────────────────────────────────┐
@@ -24,6 +25,7 @@ An interactive, high-fidelity Python web application built with Streamlit that s
                  │                                       │
                  ▼                                       ▼
        [Buzzing Server Rack]                   [Automated Cold Vault Vial]
+
 ---
 
 ## 🛠️ Architecture & Pipeline Overview
