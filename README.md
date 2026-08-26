@@ -16,16 +16,20 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 
 ## 🛠️ Architecture & Pipeline Overview
 
+```mermaid
 graph TD
     A[📤 Digital File Upload] --> B[⚙️ Binary Bitstream Extraction]
     B --> C[🧬 2-Bit Nucleotide Encoding]
     C --> D[📊 GC-Density Charting & QC]
-    C --> E[🧬 Synthesized DNA Strand]
+    C --> E[🔬 Synthesized DNA Strand]
     E --> F[🔓 2-Bit Binary Decoding]
-    F --> G[💾 100% Intact File Download]
+    F --> G[💾 100% Intact Restored Asset Download]
+    
     style A fill:#4F46E5,stroke:#333,stroke-width:2px,color:#fff
-    style G fill:#059669,stroke:#333,stroke-width:2px,color:#fff
     style E fill:#06B6D4,stroke:#333,stroke-width:2px,color:#fff
+    style G fill:#059669,stroke:#333,stroke-width:2px,color:#fff
+```
+
 ---
 
 ## 💻 Tech Stack
