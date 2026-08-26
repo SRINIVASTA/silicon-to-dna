@@ -1,43 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 import hashlib
-
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.subheader("Encode Any File")
-
-# 🚀 JAVASCRIPT INJECTION: Reaches inside the protected container to change "25MB" to "50KB"
-components.html(
-    """
-    <script>
-        function patchUploader() {
-            // Target all dropzone instructions inside the web app window
-            const instructions = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzoneInstructions"]');
-            instructions.forEach(el => {
-                // Locate the default small text tag
-                const smallText = el.querySelector('small');
-                if (smallText && !smallText.innerHTML.includes('50KB')) {
-                    // Force replace the text instantly
-                    smallText.innerHTML = "Limit 50KB per file • PDF, PNG, JPG, TXT";
-                    smallText.style.fontSize = "13px";
-                }
-            });
-        }
-        // Run immediately and repeat to catch Streamlit re-renders
-        patchUploader();
-        setInterval(patchUploader, 1000);
-    </script>
-    """,
-    height=0, # Keeps the injection tool invisible on screen
-    width=0
-)
-
-# Standard file uploader widget follows below
-uploaded_file = st.file_uploader(
-    "Choose a small file (Text, Image, PDF up to 50KB):", 
-    type=["pdf", "png", "jpg", "txt"]
-)
 
 # --- 1. SET PAGE CONFIGURATION ---
 st.set_page_config(page_title="DNA Storage Simulator Pro", page_icon="🧬", layout="wide")
@@ -138,23 +102,29 @@ tab1, tab2 = st.tabs(["📤 Upload & Encode Files", "📥 Read & Decode DNA"])
 with tab1:
     st.subheader("Encode Any File")
     
-    # 🎨 CSS CUSTOM OVERRIDE: Targets Streamlit layout block to replace '25MB' with '50KB'
-    st.markdown("""
-        <style>
-            /* Hide the default small text instructions underneath the upload area */
-            div[data-testid="stFileUploaderDropzoneInstructions"] small {
-                display: none !important;
+    # 🚀 JAVASCRIPT INJECTION: Reaches inside Streamlit DOM to modify the system "25MB" layout rule text
+    components.html(
+        """
+        <script>
+            function patchUploader() {
+                const instructions = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzoneInstructions"]');
+                instructions.forEach(el => {
+                    const smallText = el.querySelector('small');
+                    if (smallText && !smallText.innerHTML.includes('50KB')) {
+                        smallText.innerHTML = "Limit 50KB per file • PDF, PNG, JPG, TXT";
+                        smallText.style.fontSize = "13px";
+                        smallText.style.fontWeight = "bold";
+                        smallText.style.color = "#FF4B4B";
+                    }
+                });
             }
-            /* Inject a custom text label in its place matching your exact specification */
-            div[data-testid="stFileUploaderDropzoneInstructions"]::after {
-                content: "Limit 50KB per file • PDF, PNG, JPG, TXT";
-                font-size: 13px !important;
-                color: #A3A3A3;
-                display: block;
-                margin-top: 5px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+            patchUploader();
+            setInterval(patchUploader, 1000);
+        </script>
+        """,
+        height=0,
+        width=0
+    )
 
     uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"])
     
