@@ -12,6 +12,18 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 * **Interactive Waveform Profile**: Generates a moving-window chemical profile using **Plotly** to visualize GC-Content stability thresholds.
 * **Cross-Browser Reliability**: Optimized to bypass aggressive Google Chrome, Edge, and Safari security policies by handling raw byte streaming server-side.
 
+📊 Physical Storage Comparisontext
+
+💾 TRADITIONAL HARD DRIVE               🧬 SYNTHETIC DNA ARCHIVE
+┌─────────────────────────────────┐     ┌─────────────────────────────────┐
+│ • Spinning Magnetic Platters    │     │ • Microscopic Dry Powder Pellet │
+│ • Mechanical Actuator Arms      │     │ • Laser-Sealed Silica/Glass Bead│
+│ • Continuous Power Consumption  │     │ • Zero Passive Power Needed     │
+│ • Lifespan: 5–10 Years Max      │     │ • Lifespan: Thousands of Years   │
+└────────────────┬────────────────┘     └────────────────┬────────────────┘
+                 │                                       │
+                 ▼                                       ▼
+       [Buzzing Server Rack]                   [Automated Cold Vault Vial]
 ---
 
 ## 🛠️ Architecture & Pipeline Overview
