@@ -2,6 +2,43 @@ import streamlit as st
 import plotly.graph_objects as go
 import hashlib
 
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.subheader("Encode Any File")
+
+# 🚀 JAVASCRIPT INJECTION: Reaches inside the protected container to change "25MB" to "50KB"
+components.html(
+    """
+    <script>
+        function patchUploader() {
+            // Target all dropzone instructions inside the web app window
+            const instructions = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzoneInstructions"]');
+            instructions.forEach(el => {
+                // Locate the default small text tag
+                const smallText = el.querySelector('small');
+                if (smallText && !smallText.innerHTML.includes('50KB')) {
+                    // Force replace the text instantly
+                    smallText.innerHTML = "Limit 50KB per file • PDF, PNG, JPG, TXT";
+                    smallText.style.fontSize = "13px";
+                }
+            });
+        }
+        // Run immediately and repeat to catch Streamlit re-renders
+        patchUploader();
+        setInterval(patchUploader, 1000);
+    </script>
+    """,
+    height=0, # Keeps the injection tool invisible on screen
+    width=0
+)
+
+# Standard file uploader widget follows below
+uploaded_file = st.file_uploader(
+    "Choose a small file (Text, Image, PDF up to 50KB):", 
+    type=["pdf", "png", "jpg", "txt"]
+)
+
 # --- 1. SET PAGE CONFIGURATION ---
 st.set_page_config(page_title="DNA Storage Simulator Pro", page_icon="🧬", layout="wide")
 
