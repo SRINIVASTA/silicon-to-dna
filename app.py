@@ -100,18 +100,37 @@ tab1, tab2 = st.tabs(["📤 Upload & Encode Files", "📥 Read & Decode DNA"])
 # --- TAB 1: AUTOMATED ENCODER ---
 with tab1:
     st.subheader("Encode Any File")
+    
+    # 🎨 CSS CUSTOM OVERRIDE: Targets Streamlit layout block to replace '25MB' with '50KB'
+    st.markdown("""
+        <style>
+            /* Hide the default small text instructions underneath the upload area */
+            div[data-testid="stFileUploaderDropzoneInstructions"] small {
+                display: none !important;
+            }
+            /* Inject a custom text label in its place matching your exact specification */
+            div[data-testid="stFileUploaderDropzoneInstructions"]::after {
+                content: "Limit 50KB per file • PDF, PNG, JPG, TXT";
+                font-size: 13px !important;
+                color: #A3A3A3;
+                display: block;
+                margin-top: 5px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt"])
     
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         file_size_kb = len(file_bytes) / 1024
         
-        # 🚨 THE 50KB HARD GUARD BLOCK 🚨
+        # The 50KB Hard Guard Block
         if file_size_kb > 50.0:
             st.error(f"❌ Upload Blocked! Your file is {file_size_kb:.2f} KB. The simulator safety ceiling is exactly 50.0 KB to protect system memory strings.")
             st.warning("⚠️ Processing millions of generated text bases will freeze your web browser layout window. Please downsize your file.")
         else:
-            # Operational Pipeline Execution runs ONLY if file passes size check
+            # Operational Pipeline Execution
             dna_sequence = encode_bytes_to_dna(file_bytes)
             file_hash = hashlib.md5(file_bytes).hexdigest()
             
