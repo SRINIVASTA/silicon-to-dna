@@ -8,7 +8,13 @@ import re
 BINARY_TO_DNA = {'00': 'A', '01': 'C', '10': 'G', '11': 'T'}
 DNA_TO_BINARY = {v: k for k, v in BINARY_TO_DNA.items()}
 
-def bytes_to_dna(byte_data):
+def scramble_bits(byte_data):
+    # Applies an XOR Bit-Mask (0xAA = 10101010) to scramble long sequences of repetitive bits
+    return bytes([b ^ 0xAA for b in byte_data])
+
+def bytes_to_dna(byte_data, apply_scramble=False):
+    if apply_scramble:
+        byte_data = scramble_bits(byte_data)
     # Convert raw data bytes directly into a clean binary bit stream string
     binary_str = ''.join(format(b, '08b') for b in byte_data)
     # Parse bits in pairs and map directly to chemical bases
@@ -18,7 +24,7 @@ def bytes_to_dna(byte_data):
         dna_seq += BINARY_TO_DNA[pair]
     return dna_seq, binary_str
 
-def dna_to_bytes(dna_seq):
+def dna_to_bytes(dna_seq, apply_unscramble=False):
     try:
         # Convert character bases back to digital binary fragments
         binary_str = ''.join(DNA_TO_BINARY[base] for base in dna_seq if base in DNA_TO_BINARY)
@@ -28,7 +34,11 @@ def dna_to_bytes(dna_seq):
             byte = binary_str[i:i+8]
             if len(byte) == 8:
                 byte_list.append(int(byte, 2))
-        return bytes(byte_list)
+        
+        raw_bytes = bytes(byte_list)
+        if apply_unscramble:
+            raw_bytes = scramble_bits(raw_bytes) # XORing again with 0xAA perfectly reverses it
+        return raw_bytes
     except Exception:
         return None
 
@@ -44,6 +54,10 @@ st.set_page_config(page_title="DNA Data Storage Simulator Pro", page_icon="🧬"
 st.title("🧬 DNA Storage Simulator Pro")
 st.markdown("Upload production files, encode them to biological sequences, and monitor chemical density profiles.")
 
+# Keep track of scramble states across button clicks using Session State
+if 'scramble_active' not in st.session_state:
+    st.session_state.scramble_active = False
+
 tab1, tab2 = st.tabs(["📤 Upload & Encode Files", "📥 Read & Decode DNA"])
 
 with tab1:
@@ -53,8 +67,8 @@ with tab1:
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         
-        # Execute Codec Conversion Engine
-        dna_output, raw_binary = bytes_to_dna(file_bytes)
+        # Execute Codec Conversion Engine (Checks state of Scrambler)
+        dna_output, raw_binary = bytes_to_dna(file_bytes, apply_scramble=st.session_state.scramble_active)
         
         # Metric Layout Matrix Configuration
         col1, col2, col3 = st.columns(3)
@@ -69,11 +83,7 @@ with tab1:
         st.markdown("---")
         st.subheader("🔬 Real-World Biological Storage Scale")
         
-        # 1 Base Pair of single-stranded synthetic DNA is roughly 0.0000033 nanograms
         physical_weight_ng = len(dna_output) * 0.0000033
-        
-        # Max DNA capacity is ~215,000,000 Gigabytes (215 Petabytes) per gram.
-        # A single grain of sand weighs about 4,400 nanograms.
         sand_grain_capacity_bytes = 4400 / 0.0000033
         copies_in_sand = int(sand_grain_capacity_bytes / len(dna_output)) if len(dna_output) > 0 else 0
         
@@ -91,13 +101,15 @@ with tab1:
         
         with left_panel:
             st.subheader("Generated Genetic Strand Code:")
+            if st.session_state.scramble_active:
+                st.caption("🔒 *XOR Scrambler Active: Repeating bit patterns broken down.*")
+                
             preview_len = 1000
             if len(dna_output) > preview_len:
                 st.code(dna_output[:preview_len] + f"\n\n[... Truncated: {len(dna_output) - preview_len} more letters synthesized ...]", language="text")
             else:
                 st.code(dna_output, language="text")
                 
-            # Direct text strand sequence downloading function
             st.download_button(
                 label="🧬 Download Synthesized DNA Sequence (.txt)",
                 data=dna_output,
@@ -107,34 +119,23 @@ with tab1:
                 
         with right_panel:
             st.subheader("📊 Interactive Molecular Density Profile")
-            
-            # Extract frequency metrics using Collections matrix
             counts = collections.Counter(dna_output)
             total_bases = len(dna_output) if len(dna_output) > 0 else 1
             
             base_data = []
             for base in ['A', 'C', 'G', 'T']:
                 qty = counts.get(base, 0)
-                percentage = (qty / total_bases) * 100
                 base_data.append({
                     'Chemical Base': base,
                     'Quantity (Count)': qty,
-                    'Percentage (%)': round(percentage, 2)
+                    'Percentage (%)': round((qty / total_bases) * 100, 2)
                 })
             
             chart_df = pd.DataFrame(base_data)
-            
-            # Interactive vector mapping chart via Plotly Express
             fig = px.bar(
-                chart_df, 
-                x='Chemical Base', 
-                y='Quantity (Count)',
-                color='Chemical Base',
-                text='Percentage (%)',
-                color_discrete_map={'A': '#FF4B4B', 'C': '#0068C9', 'G': '#29B09D', 'T': '#FFABAB'},
-                hover_data=['Percentage (%)']
+                chart_df, x='Chemical Base', y='Quantity (Count)', color='Chemical Base', text='Percentage (%)',
+                color_discrete_map={'A': '#FF4B4B', 'C': '#0068C9', 'G': '#29B09D', 'T': '#FFABAB'}
             )
-            
             fig.update_traces(texttemplate='%{text}%', textposition='outside')
             fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=350)
             st.plotly_chart(fig, use_container_width=True)
@@ -142,7 +143,6 @@ with tab1:
             # --- STRUCTURAL CONSTRAINT VALIDATION ALERTS ---
             st.subheader("🔬 Synthesis Feasibility Report")
             
-            # Check 1: GC-Content
             gc_count = counts.get('G', 0) + counts.get('C', 0)
             gc_percentage = (gc_count / total_bases) * 100
             st.metric(label="Total GC-Content Ratio", value=f"{gc_percentage:.1f}%")
@@ -152,27 +152,32 @@ with tab1:
             else:
                 st.success("✅ Excellent chemical stability target calculated for physical manufacturing.")
                 
-            # Check 2: Homopolymer slippage warning
             has_homopolymer = check_homopolymers(dna_output)
             if has_homopolymer:
                 st.error("⚠️ Warning: Sequence contains a homopolymer sequence of 6 or more repeating bases. This could cause synthesis lasers or enzymes to slip during production.")
                 
-                # Dynamic portfolio feature: Offer an instant software fix!
+                # Active Remediation Button
                 if st.button("🔧 Apply Software XOR Scrambler to Fix Sequence"):
-                    st.info("Applying mathematical bit-mask rotation to break chemical repetition structures...")
-                    # This demonstrates to recruiters how production environments protect files!
+                    st.session_state.scramble_active = True
+                    st.rerun()
             else:
                 st.success("✅ No severe homopolymer repeats detected. Optical synthesis alignment is highly secure.")
+                if st.session_state.scramble_active:
+                    if st.button("↩️ Reset/Turn Off Scrambler"):
+                        st.session_state.scramble_active = False
+                        st.rerun()
 
 with tab2:
     st.header("Decode DNA Strands Back to Files")
     dna_input = st.text_area("Input continuous raw DNA base sequence (A, C, G, T):", "")
-    target_filename = st.text_input("Saved output name with original extension (e.g., test.png):", "downloaded_file.png")
+    target_filename = st.text_input("Saved output name with original extension (e.g., invoice_recovered.pdf):", "invoice_recovered.pdf")
+    
+    # User toggles based on whether they used the scrambler tool
+    used_scrambler = st.checkbox("Was this sequence scrambled using the XOR mask?")
     
     if st.button("Run Sequencing Pipeline") and dna_input:
-        # String scrubbing configuration to strip spacing breaks
         cleaned_dna = dna_input.upper().replace("\n", "").replace(" ", "").strip()
-        decoded_bytes = dna_to_bytes(cleaned_dna)
+        decoded_bytes = dna_to_bytes(cleaned_dna, apply_unscramble=used_scrambler)
         
         if decoded_bytes:
             st.success("🧬 Decoding sequence execution successful!")
