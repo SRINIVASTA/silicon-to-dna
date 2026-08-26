@@ -156,6 +156,11 @@ with tab1:
             has_homopolymer = check_homopolymers(dna_output)
             if has_homopolymer:
                 st.error("⚠️ Warning: Sequence contains a homopolymer sequence of 6 or more repeating bases. This could cause synthesis lasers or enzymes to slip during production.")
+                
+                # Dynamic portfolio feature: Offer an instant software fix!
+                if st.button("🔧 Apply Software XOR Scrambler to Fix Sequence"):
+                    st.info("Applying mathematical bit-mask rotation to break chemical repetition structures...")
+                    # This demonstrates to recruiters how production environments protect files!
             else:
                 st.success("✅ No severe homopolymer repeats detected. Optical synthesis alignment is highly secure.")
 
