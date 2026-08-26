@@ -1,164 +1,151 @@
 import streamlit as st
-import pandas as pd
-import collections
-import plotly.express as px
+import base64
+import math
 
-# Binary to DNA translation dictionary (Base-4 Mapping System)
-BINARY_TO_DNA = {'00': 'A', '01': 'C', '10': 'G', '11': 'T'}
-DNA_TO_BINARY = {v: k for k, v in BINARY_TO_DNA.items()}
+# --- 1. CONFIGURATION & STATE SYSTEM ---
+st.set_page_config(page_title="DNA Storage Simulator Pro", page_icon="🧬", layout="wide")
 
-def bytes_to_dna(byte_data):
-    # Convert raw data bytes directly into a clean binary bit stream string
-    binary_str = ''.join(format(b, '08b') for b in byte_data)
-    # Parse bits in pairs and map directly to chemical bases
-    dna_seq = ""
-    for i in range(0, len(binary_str), 2):
-        pair = binary_str[i:i+2]
-        dna_seq += BINARY_TO_DNA[pair]
-    return dna_seq, binary_str
+# Persistent data handshake between operations
+if "dna_strand" not in st.session_state:
+    st.session_state.dna_strand = ""
+if "filename" not in st.session_state:
+    st.session_state.filename = "downloaded_file.pdf"
+if "binary_size" not in st.session_state:
+    st.session_state.binary_size = 0
 
-def dna_to_bytes(dna_seq):
-    try:
-        # Convert character bases back to digital binary fragments
-        binary_str = ''.join(DNA_TO_BINARY[base] for base in dna_seq if base in DNA_TO_BINARY)
-        byte_list = []
-        # Re-group binary bits into standard 8-bit bytes
-        for i in range(0, len(binary_str), 8):
-            byte = binary_str[i:i+8]
-            if len(byte) == 8:
-                byte_list.append(int(byte, 2))
-        return bytes(byte_list)
-    except Exception:
-        return None
+# --- 2. BIOLOGICAL CORE ENGINE FUNCTIONS ---
+def encode_bytes_to_dna(data_bytes):
+    """Dynamically converts raw uploaded file bytes into continuous A,C,G,T strands."""
+    # Convert bytes into a clean stream of 1s and 0s
+    binary_string = "".join(f"{b:08b}" for b in data_bytes)
+    
+    # Map 2 bits to 1 nucleotide base
+    mapping = {"00": "A", "01": "C", "10": "G", "11": "T"}
+    dna_list = []
+    
+    for i in range(0, len(binary_string), 2):
+        chunk = binary_string[i:i+2]
+        if len(chunk) == 2:
+            dna_list.append(mapping[chunk])
+        else:
+            # Handle leftover single bit pad
+            dna_list.append("A" if chunk == "0" else "C")
+            
+    return "".join(dna_list), len(binary_string)
 
-# --- STREAMLIT USER INTERFACE CONFIGURATION ---
-st.set_page_config(page_title="DNA Data Storage Simulator Pro", page_icon="🧬", layout="wide")
+def decode_dna_to_bytes(dna_string):
+    """Dynamically reconstructs clean binary letters back into the original raw byte stream."""
+    mapping = {"A": "00", "C": "01", "G": "10", "T": "11"}
+    
+    # Filter away spaces or accidental punctuation marks
+    clean_dna = [base for base in dna_string.upper() if base in mapping]
+    binary_chunks = [mapping[base] for base in clean_dna]
+    binary_string = "".join(binary_chunks)
+    
+    # Ensure binary length aligns correctly with whole 8-bit bytes
+    byte_aligned_length = (len(binary_string) // 8) * 8
+    binary_string = binary_string[:byte_aligned_length]
+    
+    byte_arr = bytearray()
+    for i in range(0, len(binary_string), 8):
+        byte_arr.append(int(binary_string[i:i+8], 2))
+        
+    return bytes(byte_arr)
 
+# --- 3. DASHBOARD USER INTERFACE ---
 st.title("🧬 DNA Storage Simulator Pro")
-st.markdown("Upload production files, encode them to biological sequences, and monitor chemical density profiles.")
+st.caption("Upload production files, encode them to biological sequences, and monitor chemical density profiles.")
 
+# Navigation UI tabs
 tab1, tab2 = st.tabs(["📤 Upload & Encode Files", "📥 Read & Decode DNA"])
 
+# --- TAB 1: DYNAMIC ENCODING PROCESS ---
 with tab1:
-    st.header("Encode Any File")
-    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=['txt', 'png', 'jpg', 'pdf'])
+    st.subheader("Encode Any File")
+    uploaded_file = st.file_uploader("Choose a small file (Text, Image, PDF up to 50KB):", type=["pdf", "png", "jpg", "txt", "docx"])
     
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
+        file_size_bytes = len(file_bytes)
         
-        # Execute Codec Conversion Engine
-        dna_output, raw_binary = bytes_to_dna(file_bytes)
-        
-        # Metric Layout Matrix Configuration
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(label="File Weight", value=f"{len(file_bytes)} Bytes")
-        with col2:
-            st.metric(label="Binary Size", value=f"{len(raw_binary)} Bits")
-        with col3:
-            st.metric(label="Synthesized Strand Length", value=f"{len(dna_output)} Bases")
-            
-        # --- PHYSICAL SCALE & CAPACITY CALCULATOR ---
-        st.markdown("---")
-        st.subheader("🔬 Real-World Biological Storage Scale")
-        
-        # 1 Base Pair of single-stranded synthetic DNA is roughly 0.0000033 nanograms
-        physical_weight_ng = len(dna_output) * 0.0000033
-        
-        # Max DNA capacity is ~215,000,000 Gigabytes (215 Petabytes) per gram.
-        # A single grain of sand weighs about 4,400 nanograms.
-        sand_grain_capacity_bytes = 4400 / 0.0000033
-        copies_in_sand = int(sand_grain_capacity_bytes / len(dna_output)) if len(dna_output) > 0 else 0
-        
-        calc_col1, calc_col2, calc_col3 = st.columns(3)
-        with calc_col1:
-            st.info(f"⚖️ **Physical DNA Weight:**\n\n This file weighs **{physical_weight_ng:.6f} nanograms** as a physical molecule.")
-        with calc_col2:
-            st.info(f"⏳ **Format Lifespan:**\n\n Kept dry in cold capsules, this physical file will last for **thousands of years** without corruption.")
-        with calc_col3:
-            st.info(f"🏜️ **Density Scale:**\n\n You could pack **{copies_in_sand:,} perfect copies** of this exact file onto **a single grain of sand**.")
-        st.markdown("---")
-        
-        # Layout Division for Interface Alignment
-        left_panel, right_panel = st.columns(2)
-        
-        with left_panel:
-            st.subheader("Generated Genetic Strand Code:")
-            preview_len = 1000
-            if len(dna_output) > preview_len:
-                st.code(dna_output[:preview_len] + f"\n\n[... Truncated: {len(dna_output) - preview_len} more letters synthesized ...]", language="text")
-            else:
-                st.code(dna_output, language="text")
-                
-            # Direct text strand sequence downloading function
-            st.download_button(
-                label="🧬 Download Synthesized DNA Sequence (.txt)",
-                data=dna_output,
-                file_name="synthesized_dna.txt",
-                mime="text/plain"
-            )
-                
-        with right_panel:
-            st.subheader("📊 Interactive Molecular Density Profile")
-            
-            # Extract frequency metrics using Collections matrix
-            counts = collections.Counter(dna_output)
-            total_bases = len(dna_output) if len(dna_output) > 0 else 1
-            
-            base_data = []
-            for base in ['A', 'C', 'G', 'T']:
-                qty = counts.get(base, 0)
-                percentage = (qty / total_bases) * 100
-                base_data.append({
-                    'Chemical Base': base,
-                    'Quantity (Count)': qty,
-                    'Percentage (%)': round(percentage, 2)
-                })
-            
-            chart_df = pd.DataFrame(base_data)
-            
-            # Interactive vector mapping chart via Plotly Express
-            fig = px.bar(
-                chart_df, 
-                x='Chemical Base', 
-                y='Quantity (Count)',
-                color='Chemical Base',
-                text='Percentage (%)',
-                color_discrete_map={'A': '#FF4B4B', 'C': '#0068C9', 'G': '#29B09D', 'T': '#FFABAB'},
-                hover_data=['Percentage (%)']
-            )
-            
-            fig.update_traces(texttemplate='%{text}%', textposition='outside')
-            fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=350)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Wet-Lab structural constraint validation loop
-            gc_count = counts.get('G', 0) + counts.get('C', 0)
-            gc_percentage = (gc_count / total_bases) * 100
-            st.metric(label="Total GC-Content Ratio", value=f"{gc_percentage:.1f}%")
-            
-            if gc_percentage > 60 or gc_percentage < 40:
-                st.warning("⚠️ High structural risk: Ratios outside the 40-60% margin can trigger structural folding errors in physical wet labs.")
-            else:
-                st.success("✅ Excellent chemical stability target calculated for physical manufacturing.")
-
-with tab2:
-    st.header("Decode DNA Strands Back to Files")
-    dna_input = st.text_area("Input continuous raw DNA base sequence (A, C, G, T):", "")
-    target_filename = st.text_input("Saved output name with original extension (e.g., test.png):", "downloaded_file.png")
-    
-    if st.button("Run Sequencing Pipeline") and dna_input:
-        # String scrubbing configuration to strip spacing breaks
-        cleaned_dna = dna_input.upper().replace("\n", "").replace(" ", "").strip()
-        decoded_bytes = dna_to_bytes(cleaned_dna)
-        
-        if decoded_bytes:
-            st.success("🧬 Decoding sequence execution successful!")
-            st.download_button(
-                label="📥 Download Recovered File to Local Drive",
-                data=decoded_bytes,
-                file_name=target_filename,
-                mime="application/octet-stream"
-            )
+        # Guard checking size boundaries to protect cloud processing threads
+        if file_size_bytes > 150000:
+            st.error(f"File too large ({file_size_bytes / 1024:.2f} KB). Please upload a file smaller than 50KB.")
         else:
-            st.error("Failed to sequence file. Ensure base groupings follow rigid data bit pairings.")
+            # Execution Block: Trigger dynamic synthesis
+            dna_sequence, bit_count = encode_bytes_to_dna(file_bytes)
+            
+            # Save calculations directly to application environment cache
+            st.session_state.dna_strand = dna_sequence
+            st.session_state.filename = uploaded_file.name
+            st.session_state.binary_size = bit_count
+            
+            # Metric Columns
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("File Weight", f"{file_size_bytes / 1024:.1f} KB")
+            with col2:
+                st.metric("Binary Size", f"{file_size_bytes} Bytes")
+            with col3:
+                st.metric("Synthesized Strand Length", f"{len(dna_sequence)} Bases")
+                
+            st.markdown("### 🔬 Real-World Biological Storage Scale")
+            # Mathematical constants approximating base density physics
+            nanograms = (len(dna_sequence) * 650) / 1e9
+            
+            st.info(f"⚖️ **Physical DNA Weight:** This file weighs **{nanograms:.6f} nanograms** as a physical molecule.")
+            st.success("⏳ **Format Lifespan:** Kept dry in cold capsules, this physical file will last for thousands of years without corruption.")
+            
+            # Sequence Display Panel
+            st.markdown("### Generated Genetic Strand Code:")
+            st.text_area("Live Data Stream", value=dna_sequence, height=180, disabled=True)
+            
+            # Chemical Stability Monitoring (GC-Content Calculation)
+            gc_count = dna_sequence.count("G") + dna_sequence.count("C")
+            gc_ratio = (gc_count / len(dna_sequence)) * 100 if dna_sequence else 0
+            
+            st.markdown("### 📊 Interactive Molecular Density Profile")
+            st.metric("Total GC-Content Ratio", f"{gc_ratio:.1f}%")
+            if 40 <= gc_ratio <= 60:
+                st.success("✅ Excellent chemical stability target calculated for physical manufacturing.")
+            else:
+                st.warning("⚠️ Warning: Extreme GC balance variation could complicate thermal synthesis loops.")
+
+# --- TAB 2: DYNAMIC DECODING PROCESS ---
+with tab2:
+    st.subheader("Decode DNA Strands Back to Files")
+    
+    # AUTOMATIC CROSS-OVER PASTE LINK
+    # Pulls directly from st.session_state.dna_strand so you never have to paste manually.
+    dna_input = st.text_area(
+        "Input continuous raw DNA base sequence (A, C, G, T):", 
+        value=st.session_state.dna_strand,
+        height=180,
+        help="This automatically captures the sequence string generated in the previous step."
+    )
+    
+    # AUTOMATIC FILENAME EXTENSION RETENTION
+    output_name = st.text_input(
+        "Saved output name with original extension:", 
+        value=f"decoded_{st.session_state.filename}"
+    )
+    
+    if dna_input:
+        try:
+            # Process text content into raw assembly bytes dynamically
+            reconstructed_bytes = decode_dna_to_bytes(dna_input)
+            
+            if len(reconstructed_bytes) > 0:
+                st.success("🧬 Decoding sequence execution successful!")
+                
+                # Concrete download hook referencing active memory allocations
+                st.download_button(
+                    label="📥 Download Restored Asset",
+                    data=reconstructed_bytes,
+                    file_name=output_name,
+                    mime="application/octet-stream"
+                )
+            else:
+                st.error("The sequence string entered generated 0 bytes of readable digital data.")
+        except Exception as e:
+            st.error(f"Processing error during biological strand tracking: {str(e)}")
