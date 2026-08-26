@@ -13,8 +13,9 @@ An interactive, high-fidelity Python web application built with Streamlit that s
 * **Cross-Browser Reliability**: Optimized to bypass aggressive Google Chrome, Edge, and Safari security policies by handling raw byte streaming server-side.
 ---
 
-# 📊 Physical Storage Comparisontext
+## 🛠️ 📊 Physical Layer Architecture Diagram
 
+```mermaid
 graph TD
     %% Left Side: Traditional Hardware
     subgraph Silicon [💾 Traditional Hard Drive]
