@@ -104,11 +104,14 @@ with tab1:
     
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
+        file_size_kb = len(file_bytes) / 1024
         
-        if len(file_bytes) > 150000:
-            st.error("File size limits exceeded. Please process a file beneath 50KB.")
+        # 🚨 THE 50KB HARD GUARD BLOCK 🚨
+        if file_size_kb > 50.0:
+            st.error(f"❌ Upload Blocked! Your file is {file_size_kb:.2f} KB. The simulator safety ceiling is exactly 50.0 KB to protect system memory strings.")
+            st.warning("⚠️ Processing millions of generated text bases will freeze your web browser layout window. Please downsize your file.")
         else:
-            # Operational Pipeline Execution
+            # Operational Pipeline Execution runs ONLY if file passes size check
             dna_sequence = encode_bytes_to_dna(file_bytes)
             file_hash = hashlib.md5(file_bytes).hexdigest()
             
@@ -118,7 +121,7 @@ with tab1:
             
             # Metrics Dashboards
             c1, c2, c3 = st.columns(3)
-            c1.metric("File Weight", f"{len(file_bytes) / 1024:.2f} KB")
+            c1.metric("File Weight", f"{file_size_kb:.2f} KB")
             c2.metric("Binary Size", f"{len(file_bytes)} Bytes")
             c3.metric("Synthesized Strand Length", f"{len(dna_sequence)} Bases")
             
@@ -130,7 +133,7 @@ with tab1:
             st.markdown("### Generated Genetic Strand Code:")
             st.text_area("Full Untruncated Sequence Stream", value=dna_sequence, height=120, disabled=True)
             
-            # Direct Sequence Download Button (Saves browser clipboard crashes!)
+            # Direct Sequence Download Button
             st.download_button(
                 label="📄 Download Raw DNA Sequence (.txt)",
                 data=dna_sequence,
@@ -187,7 +190,7 @@ with tab2:
                 if st.session_state.checksum and decoded_hash == st.session_state.checksum:
                     st.success("🛡️ File Integrity Verified: MD5 matching signatures confirmed. 0% data corruption detected.")
                 else:
-                    st.warning("⚠️ Warning: Data mismatch detected. The DNA sequence modified since synthesis.")
+                    st.warning("⚠️ Warning: Data mismatch detected. The DNA sequence has been modified since synthesis.")
                 
                 # Execution download connection link
                 st.download_button(
